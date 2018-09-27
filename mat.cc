@@ -8,28 +8,17 @@
 #include <tuple>
 #include <math.h>
 #include <limits>
+
+using namespace std;
+const int INF = numeric_limits<int>::max();
+
 //Compile g++ -o mat mat.cc
 //Execute ./mat
-using namespace std;
-//const int INF = numeric_limits<int>::max();
-const int INF = 1000000;
-
-//Sample function to return min(a,b)
-int min(int a, int b){
-    if (a < b)
-        return a;
-    else
-        return b;
-}
-
 //Sample function to print matrix
 void printMat(vector<vector<int>>& A){
-    int rows_A = A.size();
-    int cols_A = A[0].size();
-    int i,j;
 
-    for (i = 0; i < rows_A; i++){
-        for (j = 0; j < cols_A; j++){
+    for (int i = 0; i < A.size(); i++){
+        for (int j = 0; j < A[0].size(); j++){
             if(A[i][j] == INF){
                 cout << "INF" << "\t";
                 }
@@ -42,100 +31,75 @@ void printMat(vector<vector<int>>& A){
 }
 
 //Function to make *matrix multiplication*
-vector<vector<int>> matmult(vector<vector<int>>& A, vector<vector<int>>& B){
-    int rows_A = A.size();
-    int cols_A = A[0].size();
-    int rows_B = B.size();
-    int cols_B = B[0].size();
-    int i,j,k;
+void matmult(const vector<vector<int>>& A, const vector<vector<int>>& B, vector<vector<int>>& G){
 
-    vector<vector<int>> C; //Matriz to return A*B
-
-    if (cols_A != rows_B)
+    if (A[0].size() != B.size())
         cout << "Cannot multiply the two matrices. Incorrect dimensions." << endl;
 
-    for (i = 0; i < rows_A; i++){
-        vector<int> aux(cols_B, INF);
-        C.push_back(aux);
-    }
-
-    for (i = 0; i < rows_A; i++){
-        for (j = 0; j < cols_B; j++){
-            for (k = 0; k < cols_A; k++){
-            	//C[i][j] = min(C[i][j], A[i][k] * B[k][j]); This is a normal multiplication
-                C[i][j] = min(C[i][j], A[i][k] + B[k][j]); //THis is a *matrix multiplication
+    for (int i = 0; i < A.size(); i++){
+        for (int j = 0; j < B[0].size(); j++){
+            for (int k = 0; k < A[0].size(); k++){
+                if (A[i][k] + B[k][j] >= 0){
+                    //C[i][j] = min(C[i][j], A[i][k] * B[k][j]); This is a normal multiplication
+                    G[i][j] = min(G[i][j], A[i][k] + B[k][j]); //THis is a *matrix multiplication
+                }
             }
         }
     }
-    return C;
 }
 
 //Normal case 2^n mat multiplication
-vector<vector<int>> mult(vector<vector<int>>& G){
-    int nodes = G.size();
-    int cont = 0, i;
-    vector<vector<int>> A = G;
-
-    for (i = 0; i < nodes; i++){
-        A = matmult(G, A);
+void mult(const vector<vector<int>>& A, vector<vector<int>>& G){
+    int cont = 0;
+    
+    for(int i = 0; i < A.size(); i++){
+        for(int j = 0; j < A[0].size(); j++){
+            G[i][j] = A[i][j];
+        }
+    }
+    for (int i = 0; i < A.size(); i++){
+        matmult(A, G, G);
         cont++;
     }
     cout<<"Multiplications with normal case: "<<cont<<endl;
-    return A;
 }
 
 //Logarithm on base (n) multiplications  l2(n)
-vector<vector<int>> Exponential(vector<vector<int>>& G){
-    bool flag = false;
-    int nodes = G.size();
-    int cont = 0, i, j;
-    vector<vector<int>> A;
-    vector<vector<int>> B;
+void Exponential(const vector<vector<int>>& A, vector<vector<int>>& G){
+    int nodes = A.size();
+    int cont = 0;
 
-    //Identity Matriz
-    if (nodes == 0){
-        for(i = 0; i < G.size(); i++){
-            for(j = 0; j < G[0].size(); j++){
-                if (i = j){
-                    G[i][j] = 1;
-                }
-                else{
-                    G[i][j] = 0;
-                }
-            }
+    for(int i = 0; i < A.size(); i++){
+        for(int j = 0; j < A[0].size(); j++){
+            G[i][j] = A[i][j];
         }
     }
 
-    //N = 1 Return G
-    if (nodes == 1){
-        return G;
+    if (nodes == 0 || nodes == 1){
+        cout<<"Incorrect operation. Matriz must to have a data"<<endl;
     }
 
-    //odd N 
+    if (nodes % 2 == 0){
+        for (int i = 0; i < (nodes/2); i++){
+            matmult(A, G, G);
+            cont++;
+        }
+    }
+
     if (nodes % 2 != 0){
-        flag = true;
         nodes = nodes - 1;
-        B = G;
+        for (int j = 0; j < (nodes/2); j++){
+            matmult(A, G, G);
+            cont++;
+        }
+        matmult(A, G, G);
     }
 
-    while (nodes != 1){
-        A = matmult(G, G);
-        G = A;
-        nodes = nodes / 2;
-        cont++;
-    }
-
-    if (flag == true){
-        A = matmult(B, G);
-        cont++;
-    }
     cout<<"Multiplications with logarithm on base(nodes): "<<cont<<endl;
-    return A;
 }
 
 int main(){
     vector<vector<int>> A;
-    vector<vector<int>> Mat;
 
 //isomorphic operation to matrix multiplication.
     A = {{0, 1, 3, INF, INF, INF, INF, INF},
@@ -147,12 +111,13 @@ int main(){
          {INF, INF, 7, INF, INF, INF, 0, INF},
          {INF, INF, INF, INF, INF, 1, INF, 0}};
 
-    Mat = mult(A);
-    printMat(Mat);
+    vector<vector<int>> C(A.size(), vector<int>(A.size(), INF));
 
-    cout<<"\n";
+    //mult(A, C);
+    //printMat(C);
+    //cout<<"\n";
 
-    Mat = Exponential(A);
-    printMat(Mat);
+    Exponential(A, C);
+    printMat(C);
     return 0;
 }
