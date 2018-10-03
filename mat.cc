@@ -1,13 +1,16 @@
 #include <iostream>
+#include <sstream>
 #include <cstdlib>
 #include <fstream>
+#include <stdlib.h>
 #include <string>
 #include <utility>
-#include <string>
 #include <vector>
-#include <tuple>
 #include <math.h>
 #include <limits>
+#include <cassert>
+#include <typeinfo>
+#include <ctime>
 
 using namespace std;
 const int INF = numeric_limits<int>::max();
@@ -15,7 +18,7 @@ const int INF = numeric_limits<int>::max();
 //Compile g++ -o mat mat.cc
 //Execute ./mat
 //Sample function to print matrix
-void printMat(vector<vector<int>>& A){
+void printMat(vector<vector<int> >& A){
 
     for (int i = 0; i < A.size(); i++){
         for (int j = 0; j < A[0].size(); j++){
@@ -30,8 +33,49 @@ void printMat(vector<vector<int>>& A){
     }
 }
 
+//Graph diameter
+int Diameter(vector<vector<int> >& A){
+    int max = 0;
+
+    for (int i = 0; i < A.size(); i++){
+        for (int j = 0; j < A[0].size(); j++){
+            if (A[i][j] != INF & A[i][j] > max){
+                max = A[i][j];
+            }
+        }
+    }
+    return max;
+}
+
+//Graph reader
+void readGraph(vector<vector<int> >& A){
+    ifstream data("data/test.txt");
+    string line;
+    int s1, s2, w;
+
+    if (data.is_open()){
+        data >> line >> s1 >> s2 >> w;
+        for (int i = 0; i < s2; i++){
+            vector<int>aux(s2, INF);
+            A.push_back(aux);
+        }
+
+        while (data.good()){
+            data >> line >> s1 >> s2 >> w;
+            A[s1-1][s2-1] = w;
+        }
+        data.close();
+    }
+    else{
+        cout << "File not exists";
+    }
+    for (int i = 0; i < A.size(); i++){
+        A[i][i] = 0;
+    } 
+}
+
 //Function to make *matrix multiplication*
-void matmult(const vector<vector<int>>& A, const vector<vector<int>>& B, vector<vector<int>>& G){
+void matmult(const vector<vector<int> >& A, const vector<vector<int> >& B, vector<vector<int> >& G){
 
     if (A[0].size() != B.size())
         cout << "Cannot multiply the two matrices. Incorrect dimensions." << endl;
@@ -49,7 +93,7 @@ void matmult(const vector<vector<int>>& A, const vector<vector<int>>& B, vector<
 }
 
 //Normal case 2^n mat multiplication
-void mult(const vector<vector<int>>& A, vector<vector<int>>& G){
+void mult(const vector<vector<int> >& A, vector<vector<int> >& G){
     int cont = 0;
     
     for(int i = 0; i < A.size(); i++){
@@ -61,11 +105,11 @@ void mult(const vector<vector<int>>& A, vector<vector<int>>& G){
         matmult(A, G, G);
         cont++;
     }
-    cout<<"Multiplications with normal case: "<<cont<<endl;
+    cout<<"\nMultiplications with normal case: "<<cont<<endl;
 }
 
 //Logarithm on base (n) multiplications  l2(n)
-void Exponential(const vector<vector<int>>& A, vector<vector<int>>& G){
+void Exponential(const vector<vector<int> >& A, vector<vector<int> >& G){
     int nodes = A.size();
     int cont = 0;
 
@@ -95,13 +139,16 @@ void Exponential(const vector<vector<int>>& A, vector<vector<int>>& G){
         matmult(A, G, G);
     }
 
-    cout<<"Multiplications with logarithm on base(nodes): "<<cont<<endl;
+    cout<<"\nMultiplications with logarithm function: "<<cont<<endl;
 }
 
 int main(){
-    vector<vector<int>> A;
-
-//isomorphic operation to matrix multiplication.
+    
+    vector<vector<int> > A;
+    readGraph(A);
+    printMat(A);
+    
+    /*/isomorphic operation to matrix multiplication.
     A = {{0, 1, 3, INF, INF, INF, INF, INF},
          {5, 0, 1, 8, INF, INF, INF, INF},
          {INF, 9, 0, INF, 8, INF, INF, INF},
@@ -109,15 +156,29 @@ int main(){
          {INF, INF, 7, INF, 0, INF, 2, 7},
          {INF, 1, INF, 4, INF, 0, 7, INF},
          {INF, INF, 7, INF, INF, INF, 0, INF},
-         {INF, INF, INF, INF, INF, 1, INF, 0}};
+         {INF, INF, INF, INF, INF, 1, INF, 0}};*/
 
-    vector<vector<int>> C(A.size(), vector<int>(A.size(), INF));
+    vector<vector<int> > C(A.size(), vector<int>(A.size(), INF));
 
-    //mult(A, C);
-    //printMat(C);
-    //cout<<"\n";
+    unsigned t0, t1;
 
-    Exponential(A, C);
+    /*t0 = clock();
+    mult(A, C);
+    t1 = clock();
+    double time1 = (double(t1-t0)/CLOCKS_PER_SEC);
     printMat(C);
+    cout << "Elapsed Time: " << time1 << endl;
+    cout<<"\n";*/
+
+    t0 = clock();
+    Exponential(A, C);
+    t1 = clock();
+    double time2 = (double(t1-t0)/CLOCKS_PER_SEC);
+    printMat(C);
+    cout << "Elapsed Time: " << time2 << endl;
+    
+    int max = Diameter(C);
+    cout << "\nMatriz Diameter " << max << endl;
+
     return 0;
 }
