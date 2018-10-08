@@ -49,7 +49,7 @@ int Diameter(vector<vector<int> >& A){
 
 //Graph reader
 void readGraph(vector<vector<int> >& A){
-    ifstream data("data/test.txt");
+    ifstream data("test.txt");
     string line;
     int s1, s2, w;
 
@@ -108,7 +108,7 @@ void mult(const vector<vector<int> >& A, vector<vector<int> >& G){
     cout<<"\nMultiplications with normal case: "<<cont<<endl;
 }
 
-//Logarithm on base (n) multiplications  l2(n)
+//Logarithm on base 2 multiplications  l2(n)
 void Exponential(const vector<vector<int> >& A, vector<vector<int> >& G){
     int nodes = A.size();
     int cont = 0;
